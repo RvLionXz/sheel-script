@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple CRUD</title>
+</head>
+<body>
+  <h1>Simple CRUD</h1>
+  <input type="text" id="nameInput" placeholder="Enter name" />
+  <button onclick="addItem()">Add</button>
+
+  <ul id="itemList"></ul>
+
+  <script>
+    const API = 'http://localhost:3000/api/items';
+
+    async function fetchItems() {
+      const res = await fetch(API);
+      const items = await res.json();
+      const list = document.getElementById('itemList');
+      list.innerHTML = '';
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          ${item.name}
+          <button onclick="deleteItem(${item.id})">Delete</button>
+          <button onclick="editItem(${item.id}, '${item.name}')">Edit</button>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    async function addItem() {
+      const name = document.getElementById('nameInput').value;
+      await fetch(API, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name })
+      });
+      document.getElementById('nameInput').value = '';
+      fetchItems();
+    }
+
+    async function deleteItem(id) {
+      await fetch(`${API}/${id}`, { method: 'DELETE' });
+      fetchItems();
+    }
+
+    async function editItem(id, oldName) {
+      const name = prompt("Edit name:", oldName);
+      if (name) {
+        await fetch(`${API}/${id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ name })
+        });
+        fetchItems();
+      }
+    }
+
+    fetchItems();
+  </script>
+</body>
+</html>
